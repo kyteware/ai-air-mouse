@@ -12,3 +12,6 @@ I worked on some other stuff, but now that I'm mostly done with my Waland tomfoo
 
 ## 2024-2-19
 I've messed around a bit more, and I finally ordered an Arduino Uno R4 Minima, which was plenty of storage :D. I'm excited to keep working on this.
+
+## 2024-2-22
+I GOT THE NEW ARDUINO! It has tons of space and I got to mess around with the DMP some more. I'm experiencing a weird issue that I don't really understand where the accelerometer is displaying VERY high values for no apparent reason. Hopefully I can figure this out.
