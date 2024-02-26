@@ -1,4 +1,4 @@
-use std::{fs::File, io::{BufReader, Read}, process::exit};
+use std::{fs::File, io::{BufReader, Read}, process::exit, time::Instant};
 use byteorder::{LittleEndian, ByteOrder};
 
 #[derive(Debug)]
@@ -34,6 +34,7 @@ fn main() {
     
     let mut err_buf = [0; 1];
     let mut packet_buf = [0; 24];
+    let mut last_check: Option<Instant> = None;
     loop {
         dev.read_exact(&mut err_buf).unwrap();
         if err_buf[0] != 43 {
@@ -41,6 +42,16 @@ fn main() {
             exit(1);
         }
         dev.read_exact(&mut packet_buf).unwrap();
-        dbg!(Packet::parse(&packet_buf));
+        let packet = Packet::parse(&packet_buf);
+
+        if let Some(last) = last_check {
+            let elapsed = last.elapsed();
+            if elapsed.as_millis() > 1000 {
+                println!("acc: {:?}, gyr: {:?}", packet.acc, packet.gyr);
+                last_check = Some(Instant::now());
+            }
+        } else {
+            last_check = Some(Instant::now());
+        }
     }
 }
