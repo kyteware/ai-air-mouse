@@ -15,3 +15,6 @@ I've messed around a bit more, and I finally ordered an Arduino Uno R4 Minima, w
 
 ## 2024-2-22
 I GOT THE NEW ARDUINO! It has tons of space and I got to mess around with the DMP some more. I'm experiencing a weird issue that I don't really understand where the accelerometer is displaying VERY high values for no apparent reason. Hopefully I can figure this out.
+
+## 2024-2-26
+I've been messing with the arduino, and I made some firmware to send accelerometer and gyroscope data to my computer. Now, I'm trying to figure out how to tune the gyroscope values to make sense (right now they drift like craaaaaazyyyyy).
