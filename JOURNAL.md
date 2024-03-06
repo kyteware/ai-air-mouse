@@ -18,3 +18,14 @@ I GOT THE NEW ARDUINO! It has tons of space and I got to mess around with the DM
 
 ## 2024-2-26
 I've been messing with the arduino, and I made some firmware to send accelerometer and gyroscope data to my computer. Now, I'm trying to figure out how to tune the gyroscope values to make sense (right now they drift like craaaaaazyyyyy).
+
+## 2024-3-6
+I'm still messing around with stopping drift, right now I'm experimenting with using a kalman filter. It uses accelerometer data to support gyroscope data. LOOK:
+
+![drfit](assets/gyro_drift.png)
+
+Gyro drifts like crazy, but accelerometer data stays constant. If I can combine them, I should get a pretty good reading.
+
+![filtered](assets/gyro_drift_fixed.png)
+
+After combining them, the green line shows the final reading (no fancy kalman filters here). Pretty good!
