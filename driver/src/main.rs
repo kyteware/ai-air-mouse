@@ -1,4 +1,4 @@
-use std::{fs::File, io::{BufReader, Read}, process::exit, time::Instant};
+use std::{f32::consts::PI, fs::File, io::{BufReader, Read}, process::exit, time::Instant};
 use byteorder::{LittleEndian, ByteOrder};
 use nalgebra::Vector3;
 
@@ -31,8 +31,8 @@ fn main() {
     let mut err_buf = [0; 1];
     let mut packet_buf = [0; 24];
     let mut last_check: Option<Instant> = None;
-    println!("orientation x, orientation y, orientation z, accel x, accel y, accel z");
-    for _ in 0..10000 {
+    println!("time, rot x, rot y, rot z, accel x, accel y, accel z");
+    loop {
         dev.read_exact(&mut err_buf).unwrap();
         if err_buf[0] != 43 {
             println!("device error");
@@ -44,11 +44,21 @@ fn main() {
         if let Some(last_check) = last_check {
             let elapsed = last_check.elapsed();
 
-            orientation += packet.gyr * elapsed.as_secs_f32();
+            let adjusted_orientation = orientation + packet.gyr * elapsed.as_secs_f32();
+            let gravity_orientation = Vector3::new(roll_from_accel(packet.acc), pitch_from_accel(packet.acc), adjusted_orientation.z);
+            orientation = adjusted_orientation * 0.98 + gravity_orientation * 0.02;
         }
 
         last_check = Some(Instant::now());
 
-        println!("{}, {}, {}, {}, {}, {}", orientation.x, orientation.y, orientation.z, packet.acc.x, packet.acc.y, packet.acc.z);
+        println!("roll: {:+06.3}, pitch: {:+03.3}, yaw: {:+03.3}", orientation.x, orientation.y, orientation.z);
     }
+}
+
+fn pitch_from_accel(acc: Vector3<f32>) -> f32 {
+    180. * acc.z.atan2(acc.x) / PI
+}
+
+fn roll_from_accel(acc: Vector3<f32>) -> f32 {
+    180. * acc.z.atan2(acc.y) / PI
 }
