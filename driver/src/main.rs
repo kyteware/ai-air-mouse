@@ -1,6 +1,7 @@
 use std::{f32::consts::PI, fs::File, io::{BufReader, Read}, process::exit, time::Instant};
 use byteorder::{LittleEndian, ByteOrder};
 use nalgebra::Vector3;
+use ahrs::{Ahrs, Madgwick};
 
 const NEW_PACKET_MAGIC: [u8; 11] = *b"stupidglove";
 const ERROR_MAGIC: [u8; 11] = *b"glovebroken";
@@ -8,14 +9,16 @@ const ERROR_MAGIC: [u8; 11] = *b"glovebroken";
 #[derive(Debug)]
 struct Packet {
     acc: Vector3<f32>,
-    gyr: Vector3<f32>
+    gyr: Vector3<f32>,
+    mag: Vector3<f32>
 }
 
 impl Packet {
-    fn parse(raw: &[u8; 24]) -> Self {
+    fn parse(raw: &[u8; 36]) -> Self {
         Self {
             acc: Vector3::new(LittleEndian::read_f32(&raw[0..4]), LittleEndian::read_f32(&raw[4..8]), LittleEndian::read_f32(&raw[8..12])),
-            gyr: Vector3::new(LittleEndian::read_f32(&raw[12..16]), LittleEndian::read_f32(&raw[16..20]), LittleEndian::read_f32(&raw[20..24]))
+            gyr: Vector3::new(LittleEndian::read_f32(&raw[12..16]), LittleEndian::read_f32(&raw[16..20]), LittleEndian::read_f32(&raw[20..24])),
+            mag: Vector3::new(LittleEndian::read_f32(&raw[24..28]), LittleEndian::read_f32(&raw[28..32]), LittleEndian::read_f32(&raw[32..36]))
         }
     }
 }
@@ -25,7 +28,6 @@ fn main() {
     let mut magic_buf = [0u8; 11];
 
     dev.read_exact(&mut magic_buf).unwrap();
-
     if magic_buf == ERROR_MAGIC {
         println!("device error");
         exit(1);
@@ -47,12 +49,10 @@ fn main() {
         }
     }
 
-    let mut orientation = Vector3::new(0.0, 0.0, 0.0);
+    let mut filter = Madgwick::new(0.0012, 0.1);
     
     let mut first_packet = true;
-    let mut packet_buf = [0; 24];
-    let mut last_check: Option<Instant> = None;
-    println!("time, rot x, rot y, rot z, accel x, accel y, accel z");
+    let mut packet_buf = [0; 36];
     loop {
         if first_packet {
             first_packet = false;
@@ -63,27 +63,16 @@ fn main() {
                 exit(1);
             }
         }
+        
         dev.read_exact(&mut packet_buf).unwrap();
         let packet = Packet::parse(&packet_buf);
 
-        if let Some(last_check) = last_check {
-            let elapsed = last_check.elapsed();
+        let orientation = filter.update(
+            &(packet.gyr * (PI / 180.0)),
+            &(packet.acc / 1000.),
+            &(packet.mag / 1000.)
+        ).unwrap().euler_angles();
 
-            let adjusted_orientation = orientation + packet.gyr * elapsed.as_secs_f32();
-            let gravity_orientation = Vector3::new(roll_from_accel(packet.acc), pitch_from_accel(packet.acc), adjusted_orientation.z);
-            orientation = adjusted_orientation * 0.98 + gravity_orientation * 0.02;
-        }
-
-        last_check = Some(Instant::now());
-
-        // println!("roll: {:+06.3}, pitch: {:+03.3}, yaw: {:+03.3}", orientation.x, orientation.y, orientation.z);
+        println!("pitch: {:+06.3} roll: {:+06.3} yaw: {:+06.3}", orientation.0 * 180. / PI, orientation.1 * 180. / PI, orientation.2 * 180. / PI);
     }
-}
-
-fn pitch_from_accel(acc: Vector3<f32>) -> f32 {
-    180. * acc.z.atan2(acc.x) / PI
-}
-
-fn roll_from_accel(acc: Vector3<f32>) -> f32 {
-    180. * acc.z.atan2(acc.y) / PI
 }
