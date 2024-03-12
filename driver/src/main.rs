@@ -2,6 +2,9 @@ use std::{f32::consts::PI, fs::File, io::{BufReader, Read}, process::exit, time:
 use byteorder::{LittleEndian, ByteOrder};
 use nalgebra::Vector3;
 
+const NEW_PACKET_MAGIC: [u8; 11] = *b"stupidglove";
+const ERROR_MAGIC: [u8; 11] = *b"glovebroken";
+
 #[derive(Debug)]
 struct Packet {
     acc: Vector3<f32>,
@@ -19,24 +22,46 @@ impl Packet {
 
 fn main() {
     let mut dev = BufReader::new(File::open("/dev/cu.usbmodem14501").unwrap());
-    let mut magic_buf = [0u8; 5];
+    let mut magic_buf = [0u8; 11];
+
     dev.read_exact(&mut magic_buf).unwrap();
-    if magic_buf != "glove".as_bytes() {
-        println!("this isn't a glove");
+
+    if magic_buf == ERROR_MAGIC {
+        println!("device error");
         exit(1);
+    }
+
+    if magic_buf != NEW_PACKET_MAGIC {
+        let mut found = false;
+        for _ in 0..35 {
+            magic_buf.rotate_left(1);
+            dev.read_exact(&mut magic_buf[10..11]).unwrap();
+            if magic_buf == NEW_PACKET_MAGIC {
+                found = true;
+                break;
+            }
+        }
+        if !found {
+            println!("not a glove");
+            exit(1);
+        }
     }
 
     let mut orientation = Vector3::new(0.0, 0.0, 0.0);
     
-    let mut err_buf = [0; 1];
+    let mut first_packet = true;
     let mut packet_buf = [0; 24];
     let mut last_check: Option<Instant> = None;
     println!("time, rot x, rot y, rot z, accel x, accel y, accel z");
     loop {
-        dev.read_exact(&mut err_buf).unwrap();
-        if err_buf[0] != 43 {
-            println!("device error");
-            exit(1);
+        if first_packet {
+            first_packet = false;
+        } else {
+            dev.read_exact(&mut magic_buf).unwrap();
+            if magic_buf != NEW_PACKET_MAGIC {
+                println!("device error");
+                exit(1);
+            }
         }
         dev.read_exact(&mut packet_buf).unwrap();
         let packet = Packet::parse(&packet_buf);
@@ -51,7 +76,7 @@ fn main() {
 
         last_check = Some(Instant::now());
 
-        println!("roll: {:+06.3}, pitch: {:+03.3}, yaw: {:+03.3}", orientation.x, orientation.y, orientation.z);
+        // println!("roll: {:+06.3}, pitch: {:+03.3}, yaw: {:+03.3}", orientation.x, orientation.y, orientation.z);
     }
 }
 
