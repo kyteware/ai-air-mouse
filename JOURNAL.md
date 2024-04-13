@@ -29,3 +29,6 @@ Gyro drifts like crazy, but accelerometer data stays constant. If I can combine 
 ![filtered](assets/gyro_drift_fixed.png)
 
 After combining them, the green line shows the final reading (no fancy kalman filters here). Pretty good!
+
+## 2024-3-15
+I've been doing a lot more work, but unfortunately my IMU has broken :(. I have ordered several more IMUs, but they wont arrive for around a month. I'm going to work on other projects in the meantime, but I'm excited to keep working on this!
