@@ -26,8 +26,12 @@ void setup()
   {
   };
 
+  SERIAL_PORT.println("test");
+
   WIRE_PORT.begin();
   WIRE_PORT.setClock(400000);
+
+  SERIAL_PORT.println("test");
 
   bool initialized = false;
   while (!initialized)
@@ -43,6 +47,8 @@ void setup()
       initialized = true;
     }
   }
+
+  SERIAL_PORT.println("test");
 
   myICM.swReset();
   if (myICM.status != ICM_20948_Stat_Ok)
@@ -61,6 +67,8 @@ void setup()
     SERIAL_PORT.write(FAIL_WORD);
     exit(0);
   }
+
+  SERIAL_PORT.println("test");
   
   ICM_20948_fss_t myFSS;
 
@@ -74,6 +82,8 @@ void setup()
     SERIAL_PORT.write(FAIL_WORD);
     exit(0);
   }
+
+  SERIAL_PORT.println("test");
 
   ICM_20948_dlpcfg_t myDLPcfg;
   myDLPcfg.a = acc_d473bw_n499bw; // (ICM_20948_ACCEL_CONFIG_DLPCFG_e)
@@ -98,9 +108,11 @@ void setup()
   myICM.setDLPFcfg((ICM_20948_Internal_Acc | ICM_20948_Internal_Gyr), myDLPcfg);
   if (myICM.status != ICM_20948_Stat_Ok)
   {
-    SERIAL_PORT.write(FAIL_WORD);
+    SERIAL_PORT.println("FAIL_WORD");
     exit(0);
   }
+
+  SERIAL_PORT.println("test");
 
   ICM_20948_Status_e accDLPEnableStat = myICM.enableDLPF(ICM_20948_Internal_Acc, false);
   ICM_20948_Status_e gyrDLPEnableStat = myICM.enableDLPF(ICM_20948_Internal_Gyr, false);
@@ -111,6 +123,8 @@ void setup()
     SERIAL_PORT.write(FAIL_WORD);
     exit(0);
   }
+
+  SERIAL_PORT.println("test");
 }
 
 typedef union {
