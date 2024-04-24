@@ -1,3 +1,5 @@
+#![allow(warnings)]
+
 use std::{f32::consts::PI, fs::File, io::{BufReader, Read}, path::Path, process::exit, sync::mpsc::Receiver, thread::JoinHandle, time::Instant};
 use byteorder::{LittleEndian, ByteOrder};
 use nalgebra::Vector3;
