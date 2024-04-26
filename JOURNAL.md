@@ -32,3 +32,6 @@ After combining them, the green line shows the final reading (no fancy kalman fi
 
 ## 2024-3-15
 I've been doing a lot more work, but unfortunately my IMU has broken :(. I have ordered several more IMUs, but they wont arrive for around a month. I'm going to work on other projects in the meantime, but I'm excited to keep working on this!
+
+# 2024-4-26
+I'd like to give a little update on what I've been working on. My new IMUs arrived, but they didn't work properly. So, I've decided to change my approach to this project, instead using hand recognition from cameras to recognize hand gestures.
