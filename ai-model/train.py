@@ -19,8 +19,8 @@ data = gesture_recognizer.Dataset.from_folder(
 train_data, rest_data = data.split(0.8)
 validation_data, test_data = rest_data.split(0.5)
 
-hparams = gesture_recognizer.HParams(export_dir="ai-model/export", epochs=10, batch_size=2, learning_rate=0.001)
-options = gesture_recognizer.GestureRecognizerOptions(hparams=hparams, model_options=gesture_recognizer.ModelOptions(layer_widths=[5]))
+hparams = gesture_recognizer.HParams(export_dir="ai-model/export", epochs=20, batch_size=2, learning_rate=0.001)
+options = gesture_recognizer.GestureRecognizerOptions(hparams=hparams, model_options=gesture_recognizer.ModelOptions())
 model = gesture_recognizer.GestureRecognizer.create(
     train_data=train_data,
     validation_data=validation_data,
