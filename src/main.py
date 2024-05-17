@@ -22,8 +22,9 @@ def callback(res, img, time):
             pos[0] += delta_thumb[0]
             pos[1] += delta_thumb[1]
         else:
-            print(streak)
-            if streak < 100 and streak > 20:
+            if streak > 0:
+                print(streak)
+            if streak < 15 and streak > 1:
                 print("left click")
             streak = 0
         old_thumb_loc = thumb_loc
