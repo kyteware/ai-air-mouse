@@ -4,31 +4,45 @@ import numpy as np
 import cv2
 import math
 from time import time
+from evdev import UInput, AbsInfo,  ecodes as e
 
 cam = cv2.VideoCapture(0)
+
+cap = {
+    e.EV_KEY : [e.BTN_LEFT, e.BTN_RIGHT],
+    e.EV_REL : [e.REL_X, e.REL_Y]
+} 
+mouse = UInput(cap, name="stupid-glove", version=0x3)
+print(mouse)
 
 pos = [500., 500.]
 old_thumb_loc = None
 streak = 0
 
+LEFT_CLICK_CUTOFF = 20
+
 def callback(res, img, time):
-    global old_thumb_loc, streak
+    global old_thumb_loc, streak, mouse
     if res.gestures:
         gesture = res.gestures[0][0]
         thumb_loc = [res.hand_landmarks[0][5].x, res.hand_landmarks[0][5].y]
-        if old_thumb_loc and gesture.category_name == "touching":
+        if old_thumb_loc and gesture.category_name == "touching" and gesture.score > 0.7:
             streak += 1
             delta_thumb = [thumb_loc[0] - old_thumb_loc[0], thumb_loc[1] - old_thumb_loc[1]]
             pos[0] += delta_thumb[0]
             pos[1] += delta_thumb[1]
+            mouse.write(e.EV_REL, e.REL_X, int(delta_thumb[0] * 3000))
+            mouse.write(e.EV_REL, e.REL_Y, int(delta_thumb[1] * 3000))
+            mouse.syn()
         else:
-            if streak > 0:
-                print(streak)
-            if streak < 15 and streak > 1:
-                print("left click")
+            if streak < LEFT_CLICK_CUTOFF and streak > 1:
+                print("emitting")
+                mouse.write(e.EV_KEY, e.BTN_LEFT, 1)
+                mouse.syn()
+                mouse.write(e.EV_KEY, e.BTN_LEFT, 0)
+                mouse.syn()
             streak = 0
         old_thumb_loc = thumb_loc
-    # print(pos)
 
 base_options = BaseOptions("ai-model/export/gesture_recognizer.task")
 options = vision.GestureRecognizerOptions(base_options, running_mode=vision.RunningMode.LIVE_STREAM, result_callback=callback)
