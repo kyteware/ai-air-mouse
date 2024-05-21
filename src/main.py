@@ -15,34 +15,38 @@ cap = {
 mouse = UInput(cap, name="stupid-glove", version=0x3)
 print(mouse)
 
-pos = [500., 500.]
-old_thumb_loc = None
-streak = 0
+old_index_loc = None
+touch_hist = [False] * 10
+touching = False
 
 LEFT_CLICK_CUTOFF = 20
 
 def callback(res, img, time):
-    global old_thumb_loc, streak, mouse
+    global old_index_loc, streak, mouse, touching, touch_hist
     if res.gestures:
         gesture = res.gestures[0][0]
-        thumb_loc = [res.hand_landmarks[0][5].x, res.hand_landmarks[0][5].y]
-        if old_thumb_loc and gesture.category_name == "touching" and gesture.score > 0.7:
-            streak += 1
-            delta_thumb = [thumb_loc[0] - old_thumb_loc[0], thumb_loc[1] - old_thumb_loc[1]]
-            pos[0] += delta_thumb[0]
-            pos[1] += delta_thumb[1]
-            mouse.write(e.EV_REL, e.REL_X, int(delta_thumb[0] * 3000))
-            mouse.write(e.EV_REL, e.REL_Y, int(delta_thumb[1] * 3000))
+        index_loc = [res.hand_landmarks[0][8].x, res.hand_landmarks[0][8].y]
+        if old_index_loc:
+            if gesture.category_name == "touching" and gesture.score > 0.7:
+                if touch_hist[6:9] == [True] * 3 and touching == False:
+                    touching = True
+                    mouse.write(e.EV_KEY, e.BTN_LEFT, 1)
+                    mouse.syn()
+                touch_hist[0:9] = touch_hist[1:10]
+                touch_hist[9] = True
+            else:
+                if touch_hist[6:9] == [False] * 3 and touching == True:
+                    touching = False
+                    mouse.write(e.EV_KEY, e.BTN_LEFT, 0)
+                    mouse.syn()
+                touch_hist[0:9] = touch_hist[1:10]
+                touch_hist[9] = False
+            delta_index = [index_loc[0] - old_index_loc[0], index_loc[1] - old_index_loc[1]]
+            mouse.write(e.EV_REL, e.REL_X, int(delta_index[0] * 3000))
+            mouse.write(e.EV_REL, e.REL_Y, int(delta_index[1] * 3000))
             mouse.syn()
-        else:
-            if streak < LEFT_CLICK_CUTOFF and streak > 1:
-                print("emitting")
-                mouse.write(e.EV_KEY, e.BTN_LEFT, 1)
-                mouse.syn()
-                mouse.write(e.EV_KEY, e.BTN_LEFT, 0)
-                mouse.syn()
-            streak = 0
-        old_thumb_loc = thumb_loc
+        old_index_loc = index_loc
+    print(touch_hist)
 
 base_options = BaseOptions("ai-model/export/gesture_recognizer.task")
 options = vision.GestureRecognizerOptions(base_options, running_mode=vision.RunningMode.LIVE_STREAM, result_callback=callback)
