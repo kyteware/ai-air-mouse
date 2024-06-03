@@ -3,3 +3,4 @@ Cargo.lock
 /dataset*
 old-dataset
 ai-model/export
+all-datasets

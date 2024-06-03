@@ -4,7 +4,7 @@ assert tf.__version__.startswith('2')
 
 from mediapipe_model_maker import gesture_recognizer
 
-dataset_path = "dataset/images"
+dataset_path = "all-datasets"
 
 labels = []
 for i in os.listdir(dataset_path):
@@ -19,7 +19,7 @@ data = gesture_recognizer.Dataset.from_folder(
 train_data, rest_data = data.split(0.8)
 validation_data, test_data = rest_data.split(0.5)
 
-hparams = gesture_recognizer.HParams(export_dir="ai-model/export", epochs=30, batch_size=2, learning_rate=0.002)
+hparams = gesture_recognizer.HParams(export_dir="ai-model/export", epochs=30, batch_size=2, learning_rate=0.001)
 options = gesture_recognizer.GestureRecognizerOptions(hparams=hparams, model_options=gesture_recognizer.ModelOptions())
 model = gesture_recognizer.GestureRecognizer.create(
     train_data=train_data,
